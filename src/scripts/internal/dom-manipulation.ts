@@ -15,7 +15,7 @@ import {
   getThead,
   getTotalSizeButton,
   getTotalSizeSpan,
-  getFallbackDirectoryInfo
+  getFallbackDirectoryInfo,
 } from '.';
 import type { GRSUpdate, GitHubTree } from './types';
 
@@ -213,7 +213,6 @@ export async function updateDOM() {
       });
     }
   }
-
 
   const updates: GRSUpdate = [];
 
