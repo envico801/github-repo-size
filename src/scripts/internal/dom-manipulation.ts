@@ -15,7 +15,7 @@ import {
   getThead,
   getTotalSizeButton,
   getTotalSizeSpan,
-  getExternalRepoSize
+  getExternalRepoSize,
 } from '.';
 import type { GRSUpdate, GitHubTree } from './types';
 
@@ -203,10 +203,8 @@ export async function updateDOM() {
     if (
       anchorPathObject.owner &&
       anchorPathObject.repo &&
-      (
-        anchorPathObject.owner !== pathObject.owner ||
-        anchorPathObject.repo !== pathObject.repo
-      )
+      (anchorPathObject.owner !== pathObject.owner ||
+        anchorPathObject.repo !== pathObject.repo)
     ) {
       const cacheKey = `${anchorPathObject.owner}/${anchorPathObject.repo}`;
 
@@ -234,7 +232,9 @@ export async function updateDOM() {
     }
 
     // Resume existing logic for standard files/folders
-    else if (!repoInfo.tree.some((file) => file.path === anchorPathObject.path)) {
+    else if (
+      !repoInfo.tree.some((file) => file.path === anchorPathObject.path)
+    ) {
       console.warn('Could not find file in repo info.');
       span = createEmptySizeSpan(anchorPath);
     } else {
