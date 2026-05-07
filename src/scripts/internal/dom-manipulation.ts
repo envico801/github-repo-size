@@ -16,6 +16,7 @@ import {
   getTotalSizeButton,
   getTotalSizeSpan,
   getFallbackDirectoryInfo,
+  getExternalRepoSize,
 } from '.';
 import type { GRSUpdate, GitHubTree } from './types';
 
@@ -216,6 +217,8 @@ export async function updateDOM() {
 
   const updates: GRSUpdate = [];
 
+  const submoduleSizeCache: Record<string, Promise<number>> = {};
+
   for (let index = 0; index < anchors.length; index++) {
     const anchor = anchors[index];
     const anchorPath = anchor.getAttribute('href');
@@ -227,7 +230,43 @@ export async function updateDOM() {
     const anchorPathObject = getPathObject(anchorPath);
     let size: number;
     let span: HTMLSpanElement | undefined;
-    if (!repoInfo.tree.some((file) => file.path === anchorPathObject.path)) {
+
+    // If the anchor links to a different owner/repo, it is a submodule
+    if (
+      anchorPathObject.owner &&
+      anchorPathObject.repo &&
+      (anchorPathObject.owner !== pathObject.owner ||
+        anchorPathObject.repo !== pathObject.repo)
+    ) {
+      const cacheKey = `${anchorPathObject.owner}/${anchorPathObject.repo}`;
+
+      span = createEmptySizeSpan(anchorPath);
+
+      if (span) {
+        span.innerText = 'Loading...';
+      }
+
+      // Start the API fetch in the background
+      if (!submoduleSizeCache[cacheKey]) {
+        submoduleSizeCache[cacheKey] = getExternalRepoSize(
+          anchorPathObject.owner,
+          anchorPathObject.repo
+        );
+      }
+
+      // Lazy load: Update the span text as soon as the promise resolves
+      // (Because 'span' is passed by reference, this updates the UI automatically)
+      submoduleSizeCache[cacheKey].then((resolvedSize) => {
+        if (span) {
+          span.innerText = formatBytes(resolvedSize);
+        }
+      });
+    }
+
+    // Resume existing logic for standard files/folders
+    else if (
+      !repoInfo.tree.some((file) => file.path === anchorPathObject.path)
+    ) {
       console.warn('Could not find file in repo info.');
       span = createEmptySizeSpan(anchorPath);
     } else {
