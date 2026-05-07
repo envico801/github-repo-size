@@ -19,6 +19,17 @@ import type { PathObject } from './types';
  */
 export const getPathObject = (path?: string) => {
   path = path ?? window.location.pathname;
+
+  // If GitHub injects an absolute URL (common on forks),
+  // extract just the pathname so our index-based parsing doesn't shift and break.
+  if (path.startsWith('http') || path.startsWith('//')) {
+    try {
+      path = new URL(path, window.location.origin).pathname;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   const pathObject = {};
   try {
     const paths = path.split('/');
